@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:google_admob/presentation/widgets/adbutton_widget.dart';
+import 'package:google_admob/presentation/widgets/banner_ad_widget.dart';
 
-class AllButtonScreen extends StatelessWidget {
+class AllButtonScreen extends StatefulWidget {
   const AllButtonScreen({super.key});
 
+  @override
+  State<AllButtonScreen> createState() => _AllButtonScreenState();
+}
+
+class _AllButtonScreenState extends State<AllButtonScreen> {
+  bool isBannerAd = false;
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,20 +59,24 @@ class AllButtonScreen extends StatelessWidget {
                 const SizedBox(height: 50),
 
                 // Banner Ad Button
-                _AdButton(
+                AdButton(
                   title: 'Banner Ad',
                   subtitle: 'Rectangular ad at the bottom',
                   icon: Icons.image_outlined,
                   color: const Color(0xFF6200EE),
                   onPressed: () {
-                    _showAdDialog(context, 'Banner Ad',
-                        'Banner ads appear at the bottom of the screen');
+                    // _showAdDialog(context, 'Banner Ad',
+                    //     'Banner ads appear at the bottom of the screen');
+                    setState(() {
+                      isBannerAd = !isBannerAd;
+                    });
+
                   },
                 ),
                 const SizedBox(height: 20),
 
                 // Interstitial Ad Button
-                _AdButton(
+                AdButton(
                   title: 'Interstitial Ad',
                   subtitle: 'Full-screen ads between transitions',
                   icon: Icons.fullscreen_outlined,
@@ -76,7 +89,7 @@ class AllButtonScreen extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // Rewarded Ad Button
-                _AdButton(
+                AdButton(
                   title: 'Rewarded Ad',
                   subtitle: 'Users earn rewards after watching',
                   icon: Icons.card_giftcard_outlined,
@@ -87,6 +100,9 @@ class AllButtonScreen extends StatelessWidget {
                   },
                 ),
 
+                const SizedBox(height: 20),
+               if(isBannerAd)
+                 BannerAdWidget(),
                 const Spacer(),
 
                 // Footer
@@ -124,119 +140,6 @@ class AllButtonScreen extends StatelessWidget {
             child: const Text('Close'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _AdButton extends StatefulWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _AdButton({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  State<_AdButton> createState() => _AdButtonState();
-}
-
-class _AdButtonState extends State<_AdButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) {
-        setState(() => _isPressed = true);
-      },
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onPressed();
-      },
-      onTapCancel: () {
-        setState(() => _isPressed = false);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        transform: Matrix4.identity()..scale(_isPressed ? 0.97 : 1.0),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              widget.color,
-              widget.color.withOpacity(0.8),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: widget.color.withOpacity(_isPressed ? 0.3 : 0.5),
-              blurRadius: _isPressed ? 8 : 12,
-              offset: Offset(0, _isPressed ? 2 : 8),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(
-            children: [
-              // Icon
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  widget.icon,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Text
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.subtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Arrow Icon
-              Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.white.withOpacity(0.7),
-                size: 18,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

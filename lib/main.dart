@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_admob/presentation/all_button_screen.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,6 +11,14 @@ void main() async {
   } catch (e) {
     print("⚠ Warning: Could not load .env file: $e");
   }
+  
+  try {
+    await MobileAds.instance.initialize();
+    print("✓ Google Mobile Ads initialized");
+  } catch (e) {
+    print("⚠ Warning: Could not initialize Mobile Ads: $e");
+  }
+
   runApp(const MyApp());
 }
 
