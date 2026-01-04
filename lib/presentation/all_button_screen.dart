@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_admob/presentation/widgets/adbutton_widget.dart';
 import 'package:google_admob/presentation/widgets/banner_ad_widget.dart';
+import 'package:google_admob/presentation/widgets/interstitial_ad_manager.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AllButtonScreen extends StatefulWidget {
   const AllButtonScreen({super.key});
@@ -12,6 +15,27 @@ class AllButtonScreen extends StatefulWidget {
 class _AllButtonScreenState extends State<AllButtonScreen> {
   bool isBannerAd = false;
   
+
+  InterstitialAdManger interstitialAdManger = InterstitialAdManger.instance();
+@override
+void initState(){
+  interstitialAdManger.loadInterstitialAd(dotenv.env['INTERSTITIAL_UNIT_ID'] ?? '');
+  super.initState();
+}
+
+@override
+void dispose(){
+  interstitialAdManger.disposeAd();
+  super.dispose();
+}
+
+void onButtonPressed(){
+  interstitialAdManger.showAd();
+
+  // Additional logic can be added here if needed
+  // for example, loading a new ad after showing the current one.
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,10 +105,7 @@ class _AllButtonScreenState extends State<AllButtonScreen> {
                   subtitle: 'Full-screen ads between transitions',
                   icon: Icons.fullscreen_outlined,
                   color: const Color(0xFF03DAC6),
-                  onPressed: () {
-                    _showAdDialog(context, 'Interstitial Ad',
-                        'Full-screen ads that appear between screen transitions');
-                  },
+                  onPressed: onButtonPressed,
                 ),
                 const SizedBox(height: 20),
 

@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-class InterstitialManger{
+class InterstitialAdManger{
   
+InterstitialAdManger.instance();
+
   InterstitialAd?_interstitialAd;
   bool isAdLoaded=false;
 
