@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_admob/presentation/widgets/adbutton_widget.dart';
 import 'package:google_admob/presentation/widgets/banner_ad_widget.dart';
 import 'package:google_admob/presentation/widgets/interstitial_ad_manager.dart';
+import 'package:google_admob/presentation/widgets/reward_ad_manager.dart';
 
 class AllButtonScreen extends StatefulWidget {
   const AllButtonScreen({super.key});
@@ -20,11 +21,12 @@ class _AllButtonScreenState extends State<AllButtonScreen>
   late Animation<Offset> _floatingAnimation;
 
   InterstitialAdManger interstitialAdManger = InterstitialAdManger.instance();
+  RewardAdManager rewardAdManager = RewardAdManager.instance();
 
   @override
   void initState() {
     interstitialAdManger.loadInterstitialAd(dotenv.env['INTERSTITIAL_UNIT_ID'] ?? '');
-    
+    rewardAdManager.loadRewardedAd(dotenv.env['REWARDED_UNIT_ID'] ?? '');
     // Setup floating animation
     _floatingAnimationController = AnimationController(
       duration: const Duration(seconds: 3),
@@ -45,6 +47,7 @@ class _AllButtonScreenState extends State<AllButtonScreen>
   void dispose() {
     _floatingAnimationController.dispose();
     interstitialAdManger.disposeAd();
+    rewardAdManager.disposeAd();
     super.dispose();
   }
 
@@ -59,7 +62,7 @@ class _AllButtonScreenState extends State<AllButtonScreen>
       interstitialAdManger.showAd();
     }
   }
-
+// Show loading dialog for  ad. when ad is not loaded.
   void _showLoadingDialog() {
     showDialog(
       context: context,
@@ -114,6 +117,19 @@ class _AllButtonScreenState extends State<AllButtonScreen>
         ),
       ),
     );
+  }
+
+void watchRewardedAd() {
+    if (!rewardAdManager.isAdLoaded) {
+      _showLoadingDialog();
+      rewardAdManager.loadRewardedAd(dotenv.env['REWARDED_UNIT_ID'] ?? '');
+    } else {
+      rewardAdManager.showRewardedAd(onUserEarnedReward: () {
+        setState(() {
+          coinCount += 10; // Assuming reward amount is 1, adjust as needed
+        });
+      });
+    }
   }
 
   @override
@@ -214,10 +230,7 @@ Center(
                   subtitle: 'Users earn rewards after watching',
                   icon: Icons.card_giftcard_outlined,
                   color: const Color(0xFFFF6D00),
-                  onPressed: () {
-                    _showAdDialog(context, 'Rewarded Ad',
-                        'Users watch an ad and receive in-app rewards');
-                  },
+                  onPressed: watchRewardedAd,
                 ),
       
                 const SizedBox(height: 20),

@@ -10,7 +10,7 @@ class RewardAdManager {
     return _instance;
   }
   RewardAdManager._internal();
-  
+
 RewardedAd?_rewardedAd;
   bool isAdLoaded = false;
   late String _unitId;
@@ -78,4 +78,10 @@ RewardedAd?_rewardedAd;
 
   }
 
+
+  void disposeAd() {
+    _rewardedAd?.dispose();
+    // _rewardedAd = null;
+    // isAdLoaded = false;
+  }
 }
