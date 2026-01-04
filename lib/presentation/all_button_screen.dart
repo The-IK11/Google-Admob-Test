@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_admob/presentation/widgets/adbutton_widget.dart';
 import 'package:google_admob/presentation/widgets/banner_ad_widget.dart';
 import 'package:google_admob/presentation/widgets/interstitial_ad_manager.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AllButtonScreen extends StatefulWidget {
   const AllButtonScreen({super.key});
@@ -13,34 +12,96 @@ class AllButtonScreen extends StatefulWidget {
 }
 
 class _AllButtonScreenState extends State<AllButtonScreen> {
+  bool isLoad = false;
   bool isBannerAd = false;
-  
 
   InterstitialAdManger interstitialAdManger = InterstitialAdManger.instance();
-@override
-void initState(){
-  interstitialAdManger.loadInterstitialAd(dotenv.env['INTERSTITIAL_UNIT_ID'] ?? '');
-  super.initState();
-}
 
-@override
-void dispose(){
-  interstitialAdManger.disposeAd();
-  super.dispose();
-}
+  @override
+  void initState() {
+    interstitialAdManger.loadInterstitialAd(dotenv.env['INTERSTITIAL_UNIT_ID'] ?? '');
+    super.initState();
+  }
 
-void onButtonPressed(){
-  interstitialAdManger.showAd();
+  @override
+  void dispose() {
+    interstitialAdManger.disposeAd();
+    super.dispose();
+  }
 
-  // Additional logic can be added here if needed
-  // for example, loading a new ad after showing the current one.
-}
+  void onButtonPressed() {
+    // Show loading dialog if ad is not loaded yet
+    if (!interstitialAdManger.isAdLoaded) {
+      _showLoadingDialog();
+      // Load the ad
+      interstitialAdManger.loadInterstitialAd(dotenv.env['INTERSTITIAL_UNIT_ID'] ?? '');
+    } else {
+      // Ad is already loaded, show it
+      interstitialAdManger.showAd();
+    }
+  }
+
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WillPopScope(
+        onWillPop: () async => false,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(30),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6200EE)),
+                        strokeWidth: 4,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Loading Ad...',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please wait a moment',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Google AdMob'),
+        title: const Text('Google AdMob',style: TextStyle(color: Colors.white),),
         centerTitle: true,
         elevation: 0,
         backgroundColor: const Color(0xFF6200EE),
@@ -81,7 +142,7 @@ void onButtonPressed(){
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 50),
-
+      
                 // Banner Ad Button
                 AdButton(
                   title: 'Banner Ad',
@@ -94,11 +155,11 @@ void onButtonPressed(){
                     setState(() {
                       isBannerAd = !isBannerAd;
                     });
-
+      
                   },
                 ),
                 const SizedBox(height: 20),
-
+      
                 // Interstitial Ad Button
                 AdButton(
                   title: 'Interstitial Ad',
@@ -108,7 +169,7 @@ void onButtonPressed(){
                   onPressed: onButtonPressed,
                 ),
                 const SizedBox(height: 20),
-
+      
                 // Rewarded Ad Button
                 AdButton(
                   title: 'Rewarded Ad',
@@ -120,12 +181,12 @@ void onButtonPressed(){
                         'Users watch an ad and receive in-app rewards');
                   },
                 ),
-
+      
                 const SizedBox(height: 20),
                if(isBannerAd)
                  BannerAdWidget(),
                 const Spacer(),
-
+      
                 // Footer
                 Container(
                   padding: const EdgeInsets.all(16),

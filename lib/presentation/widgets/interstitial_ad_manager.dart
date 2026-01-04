@@ -1,68 +1,88 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-class InterstitialAdManger{
+class InterstitialAdManger {
   
-InterstitialAdManger.instance();
+  static final InterstitialAdManger _instance = InterstitialAdManger._internal();
 
-  InterstitialAd?_interstitialAd;
-  bool isAdLoaded=false;
+  factory InterstitialAdManger.instance() {
+    return _instance;
+  }
 
+  InterstitialAdManger._internal();
 
-//load the ad under this _interstitialAd;
+  InterstitialAd? _interstitialAd;
+  bool isAdLoaded = false;
+  late String _unitId;
 
-  void loadInterstitialAd(String unitId){
+  void setUnitId(String unitId) {
+    _unitId = unitId;
+  }
 
-//add unit id for testing if it is release mode it will take automatically the real unit id 
+  // Load the ad under this _interstitialAd
+  void loadInterstitialAd(String unitId) {
+    _unitId = unitId;
+    
+    if (unitId.isEmpty) {
+      debugPrint('ERROR: INTERSTITIAL_UNIT_ID is empty');
+      return;
+    }
+
+    debugPrint('🔍 Loading Interstitial Ad with Unit ID: $unitId');
+
     InterstitialAd.load(
-
-     // adUnitId: kReleaseMode ? unitId : InterstitialAd.testAdUnitId, 
       adUnitId: unitId,
-      request: const AdRequest(), 
+      request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad){
-          _interstitialAd=ad;
-          isAdLoaded=true;
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          isAdLoaded = true;
+          debugPrint('✓ Interstitial Ad loaded successfully');
 
-          //load this ad for full screen
-
-          ad.fullScreenContentCallback=FullScreenContentCallback(
-            onAdShowedFullScreenContent: (InterstitialAd ad)=>debugPrint('Ad showed full screen'),
-            onAdDismissedFullScreenContent: (InterstitialAd ad){
-              debugPrint('Ad dismissed full screen');
+          // Set up full screen content callback
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdShowedFullScreenContent: (InterstitialAd ad) => 
+              debugPrint('✓ Ad showed full screen'),
+            onAdDismissedFullScreenContent: (InterstitialAd ad) {
+              debugPrint('✓ Ad dismissed full screen');
               ad.dispose();
+              isAdLoaded = false;
+              // Reload the ad after it's dismissed
+              loadInterstitialAd(_unitId);
             },
-            onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error){
-              debugPrint('Ad failed to show full screen: $error');
+            onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+              debugPrint('✗ Ad failed to show full screen: $error');
               ad.dispose();
+              isAdLoaded = false;
+              // Reload the ad after failure
+              loadInterstitialAd(_unitId);
             },
           );
-        }, 
-        onAdFailedToLoad: 
-        (LoadAdError error){
-isAdLoaded=false;
-          debugPrint('InterstitialAd failed to load: $error');
-        })
-      
-      );
- 
-
-}
-
-// show the ad , if it is loaded
-void showAd(){
-  if(isAdLoaded && _interstitialAd!=null){
-    _interstitialAd?.show();
-  }else{
-    debugPrint('Ad is not loaded yet');
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          isAdLoaded = false;
+          debugPrint('✗ Interstitial Ad failed to load: $error');
+        },
+      ),
+    );
   }
-}
 
-/// dispose the ad when not needed
-void disposeAd(){
-  _interstitialAd?.dispose();
-  _interstitialAd = null;
-  isAdLoaded = false;
-}
+  // Show the ad if it is loaded
+  void showAd() {
+    if (isAdLoaded && _interstitialAd != null) {
+      debugPrint('📺 Showing Interstitial Ad');
+      _interstitialAd?.show();
+    } else {
+      debugPrint('⏳ Ad is not loaded yet, loading...');
+      loadInterstitialAd(_unitId);
+    }
+  }
 
+  // Dispose the ad when not needed
+  void disposeAd() {
+    _interstitialAd?.dispose();
+    _interstitialAd = null;
+    isAdLoaded = false;
+    debugPrint('✓ Ad disposed');
+  }
 }
