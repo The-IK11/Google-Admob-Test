@@ -11,20 +11,39 @@ class AllButtonScreen extends StatefulWidget {
   State<AllButtonScreen> createState() => _AllButtonScreenState();
 }
 
-class _AllButtonScreenState extends State<AllButtonScreen> {
+class _AllButtonScreenState extends State<AllButtonScreen>
+    with SingleTickerProviderStateMixin {
   bool isLoad = false;
   bool isBannerAd = false;
+  int coinCount = 0;
+  late AnimationController _floatingAnimationController;
+  late Animation<Offset> _floatingAnimation;
 
   InterstitialAdManger interstitialAdManger = InterstitialAdManger.instance();
 
   @override
   void initState() {
     interstitialAdManger.loadInterstitialAd(dotenv.env['INTERSTITIAL_UNIT_ID'] ?? '');
+    
+    // Setup floating animation
+    _floatingAnimationController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _floatingAnimation = Tween<Offset>(
+      begin: const Offset(0, 0),
+      end: const Offset(0, -15),
+    ).animate(
+      CurvedAnimation(parent: _floatingAnimationController, curve: Curves.easeInOut),
+    );
+    
     super.initState();
   }
 
   @override
   void dispose() {
+    _floatingAnimationController.dispose();
     interstitialAdManger.disposeAd();
     super.dispose();
   }
@@ -123,6 +142,25 @@ class _AllButtonScreenState extends State<AllButtonScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                //Admob logo
+
+Center(
+                  child: Image.network(
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Logo_de_Google_AdMob.png/640px-Logo_de_Google_AdMob.png',
+                    loadingBuilder: (context, child, loadingProgress) => loadingProgress == null
+                        ? child
+                        : const SizedBox(
+                            width: 50,
+                            height: 50,
+                            child: CircularProgressIndicator(),
+                          ),
+                    height: 80,
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    fit: BoxFit.cover,
+                  
+                  ),
+                ),
+
                 // Header Text
                 const SizedBox(height: 20),
                 Text(
@@ -185,9 +223,109 @@ class _AllButtonScreenState extends State<AllButtonScreen> {
                 const SizedBox(height: 20),
                if(isBannerAd)
                  BannerAdWidget(),
-                const Spacer(),
-      
-                // Footer
+
+               // Earned coin by rewarded ad
+               Container(
+                 margin: const EdgeInsets.symmetric(vertical: 20),
+                 padding: const EdgeInsets.all(20),
+                 decoration: BoxDecoration(
+                   gradient: LinearGradient(
+                     colors: [
+                       const Color(0xFFFFD700).withOpacity(0.9),
+                       const Color(0xFFFFA500).withOpacity(0.9),
+                     ],
+                     begin: Alignment.topLeft,
+                     end: Alignment.bottomRight,
+                   ),
+                   borderRadius: BorderRadius.circular(20),
+                   boxShadow: [
+                     BoxShadow(
+                       color: const Color(0xFFFFD700).withOpacity(0.5),
+                       blurRadius: 15,
+                       offset: const Offset(0, 8),
+                     ),
+                   ],
+                 ),
+                 child: Row(
+                   mainAxisAlignment: MainAxisAlignment.center,
+                   children: [
+                     // Coin Icon
+                     Container(
+                       padding: const EdgeInsets.all(12),
+                       decoration: BoxDecoration(
+                         color: Colors.white.withOpacity(0.3),
+                         borderRadius: BorderRadius.circular(12),
+                       ),
+                       child: const Icon(
+                         Icons.monetization_on,
+                         color: Colors.white,
+                         size: 40,
+                       ),
+                     ),
+                     const SizedBox(width: 20),
+                     // Coin Count with Floating Animation
+                     Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         Text(
+                           'Total Coins',
+                           style: TextStyle(
+                             fontSize: 12,
+                             fontWeight: FontWeight.w500,
+                             color: Colors.white.withOpacity(0.9),
+                           ),
+                         ),
+                         const SizedBox(height: 4),
+                         // Floating Coin Count
+                         SlideTransition(
+                           position: _floatingAnimation,
+                           child: Text(
+                             '$coinCount',
+                             style: const TextStyle(
+                               fontSize: 32,
+                               fontWeight: FontWeight.bold,
+                               color: Colors.white,
+                             ),
+                           ),
+                         ),
+                       ],
+                     ),
+                     const Spacer(),
+                     // Add Coin Button (for testing)
+                     GestureDetector(
+                       onTap: () {
+                         setState(() {
+                           coinCount += 10;
+                         });
+                       },
+                       child: Container(
+                         padding: const EdgeInsets.symmetric(
+                           horizontal: 16,
+                           vertical: 10,
+                         ),
+                         decoration: BoxDecoration(
+                           color: Colors.white.withOpacity(0.2),
+                           borderRadius: BorderRadius.circular(12),
+                           border: Border.all(
+                             color: Colors.white.withOpacity(0.5),
+                             width: 2,
+                           ),
+                         ),
+                         child: const Text(
+                           '+10',
+                           style: TextStyle(
+                             fontSize: 14,
+                             fontWeight: FontWeight.bold,
+                             color: Colors.white,
+                           ),
+                         ),
+                       ),
+                     ),
+                   ],
+                 ),
+               ),
+
+                const Spacer(),                // Footer
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
