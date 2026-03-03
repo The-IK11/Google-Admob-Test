@@ -3,7 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_admob/presentation/widgets/adbutton_widget.dart';
 import 'package:google_admob/presentation/widgets/banner_ad_widget.dart';
 import 'package:google_admob/presentation/widgets/interstitial_ad_manager.dart';
+import 'package:google_admob/presentation/widgets/native_ad_manager.dart';
 import 'package:google_admob/presentation/widgets/reward_ad_manager.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AllButtonScreen extends StatefulWidget {
   const AllButtonScreen({super.key});
@@ -22,11 +24,13 @@ class _AllButtonScreenState extends State<AllButtonScreen>
 
   InterstitialAdManger interstitialAdManger = InterstitialAdManger.instance();
   RewardAdManager rewardAdManager = RewardAdManager.instance();
+  NativeAdManager nativeAdManager = NativeAdManager.instance();
 
   @override
   void initState() {
     interstitialAdManger.loadInterstitialAd(dotenv.env['INTERSTITIAL_UNIT_ID'] ?? '');
     rewardAdManager.loadRewardedAd(dotenv.env['REWARDED_UNIT_ID'] ?? '');
+    nativeAdManager.loadNativeAd(dotenv.env['NATIVE_UNIT_ID'] ?? '');
     // Setup floating animation
     _floatingAnimationController = AnimationController(
       duration: const Duration(seconds: 3),
@@ -48,6 +52,7 @@ class _AllButtonScreenState extends State<AllButtonScreen>
     _floatingAnimationController.dispose();
     interstitialAdManger.disposeAd();
     rewardAdManager.disposeAd();
+    nativeAdManager.disposeAd();
     super.dispose();
   }
 
@@ -132,6 +137,54 @@ void watchRewardedAd() {
     }
   }
 
+void showNativeAd() {
+    if (!nativeAdManager.isAdLoaded) {
+      _showLoadingDialog();
+      nativeAdManager.loadNativeAd(dotenv.env['NATIVE_UNIT_ID'] ?? '');
+    } else {
+      // Show native ad in a dialog or bottomsheet
+      _showNativeAdDialog();
+    }
+  }
+
+void _showNativeAdDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Close button
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            // Native Ad
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                height: 250,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: nativeAdManager.getNativeAd() != null
+                    ? AdWidget(ad: nativeAdManager.getNativeAd()!)
+                    : const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,7 +206,7 @@ void watchRewardedAd() {
           ),
         ),
         child: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -162,7 +215,7 @@ void watchRewardedAd() {
 
 Center(
                   child: Image.network(
-                    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Logo_de_Google_AdMob.png/640px-Logo_de_Google_AdMob.png',
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Logo_de_Google_AdMob.png/1920px-Logo_de_Google_AdMob.png',
                     loadingBuilder: (context, child, loadingProgress) => loadingProgress == null
                         ? child
                         : const SizedBox(
@@ -233,6 +286,17 @@ Center(
                   onPressed: watchRewardedAd,
                 ),
       
+                const SizedBox(height: 20),
+
+                // Native Ad Button
+                AdButton(
+                  title: 'Native Ad',
+                  subtitle: 'Customized ads that blend with content',
+                  icon: Icons.layers_outlined,
+                  color: const Color(0xFF1976D2),
+                  onPressed: showNativeAd,
+                ),
+
                 const SizedBox(height: 20),
                if(isBannerAd)
                  BannerAdWidget(),
@@ -338,7 +402,7 @@ Center(
                  ),
                ),
 
-                const Spacer(),                // Footer
+           //     const Spacer(),                // Footer
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -357,22 +421,6 @@ Center(
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  void _showAdDialog(BuildContext context, String title, String description) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(description),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }
